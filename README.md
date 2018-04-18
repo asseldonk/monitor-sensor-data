@@ -1,4 +1,4 @@
-#Monitor Sensor Data with influxDB and Dash
+# Monitor Sensor Data with influxDB and Dash
 
 This repository provides two python files for read, store and visualize sensor data.
 
