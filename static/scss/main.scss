@@ -1,0 +1,21 @@
+$dark-background : rgb(36, 36, 36);
+$font-color      : rgb(240, 240, 240);
+
+body {
+    background-color        : $dark-background;
+    font-family             : Arial, Helvetica, sans-serif;
+    min-height              : 100%;
+    -webkit-font-smoothing  : antialiased;
+    -moz-osx-font-smoothing : grayscale;
+
+    h1 {
+        color : $font-color;
+    }
+
+    ._dash-undo-redo {
+        background-color : transparent!important;
+        span {
+            color : rgb(240,240,240)!important;
+        }
+    }
+}
