@@ -18,7 +18,7 @@ def create_database(client, db_name):
 
 def create_downsampling(client, db_name):
     # create retention policies: delete raw data after one hour, collect other data forever
-    client.query('create retention policy "rp_1h" on ' + db_name + ' duration 1h replication 1 default')
+    client.query('create retention policy rp_1h on ' + db_name + ' duration 1h replication 1 default')
     # create continuous queries
     client.query('create continuous query cq_60s on ' + db_name + ' begin select mean(temperature) as temperature into autogen.mean_60s from data_raw group by time(60s) end')
     client.query('create continuous query cq_1h on ' + db_name + ' begin select mean(temperature) as temperature into autogen.mean_1h from autogen.mean_60s group by time(1h) end')
