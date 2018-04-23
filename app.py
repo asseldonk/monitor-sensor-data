@@ -21,7 +21,7 @@ def read_db(db_name, measurement, period):
     data   = result[column]
     # convert utc time to local time
     data.index = data.index.tz_convert('Europe/Berlin')
-    # hack due to (plotly tries to use utc time first):
+    # plotly tries to use utc time first, so remove timezone information:
     # https://github.com/plotly/plotly.py/blob/6f9621a611da36f10678c9d9c8c784f55e472429/plotly/utils.py#L263
     data.index = data.index.tz_localize(None)
     return data
@@ -76,7 +76,10 @@ def get_data(data, item, color):
 
 
 # default data
-data = read_db('sensor_data', 'autogen.mean_60s', '1d')
+db_name     = 'sensor_data'
+measurement = 'autogen.mean_60s'
+period      = '1d'
+data        = read_db(db_name, measurement, period)
 # dash
 app  = dash.Dash()
 app.layout = html.Div(
@@ -86,6 +89,61 @@ app.layout = html.Div(
             href = '/static/css/main.css'
         ),
         html.H1('Sensor Data'),
+        html.Div([
+            html.Div([
+                # dropdown for selecting measurement
+                html.Label('Select measurement:'),
+                dcc.Dropdown(
+                    id        = 'dropdown-measurement',
+                    options   = [
+                        {'label': 'raw data',               'value': 'data_raw'},
+                        {'label': 'averaged over 1 minute', 'value': 'autogen.mean_60s'},
+                        {'label': 'averaged over 1 hour',   'value': 'autogen.mean_1h'},
+                        {'label': 'averaged over 1 day',    'value': 'autogen.mean_1d'}
+                    ],
+                    value     = 'autogen.mean_60s',
+                    clearable = False
+                ),
+            ]),
+            html.Div([
+                # dropdown for selecting period
+                html.Label('Select Period:'),
+                dcc.Dropdown(
+                    id        = 'dropdown-period',
+                    options   = [
+                        {'label': '1 min',   'value': '1m'},
+                        {'label': '10 min',  'value': '10m'},
+                        {'label': '1 hour',  'value': '1h'},
+                        {'label': '1 day',   'value': '1d'},
+                        {'label': '1 week',  'value': '1w'},
+                        {'label': '1 month', 'value': '4w'}
+                    ],
+                    value     = '1d',
+                    clearable = False
+                )
+            ]),
+            html.Div([
+                # dropdown for selecting update interval
+                # since infinity or no interval is not posible,
+                # use maximum permitted time: 2147483647 (about 24.86 days)
+                html.Label('Select update interval:'),
+                dcc.Dropdown(
+                    id        = 'dropdown-interval',
+                    options   = [
+                        {'label': 'every 5 seconds',  'value': 5*1000},
+                        {'label': 'every 10 seconds', 'value': 10*1000},
+                        {'label': 'every minute',     'value': 60*1000},
+                        {'label': 'every hour',       'value': 60*60*1000},
+                        {'label': 'every day',        'value': 24*60*60*1000},
+                        {'label': 'never',            'value': 2147483647}
+                    ],
+                    value     = 60*1000,
+                    clearable = False
+                )
+            ])
+        ],
+        className = 'dropdowns'
+        ),
         # temperatur graph
         dcc.Graph(id      = 'graph-temperature',
                   figure  = {
@@ -94,7 +152,6 @@ app.layout = html.Div(
                   }
         ),
         dcc.Interval(id          = 'interval-component',
-                     interval    = 1*60000,
                      n_intervals = 0
         ),
     ]
@@ -107,15 +164,24 @@ def static_file(path):
     static_folder = os.path.join(os.getcwd(), 'static')
     return send_from_directory(static_folder, path)
 
+# update interval
+@app.callback(Output('interval-component', 'interval'),
+              [Input('dropdown-interval', 'value')
+              ])
+def update_interval(value):
+    return value
+
 
 # update temperature graph
 @app.callback(Output('graph-temperature', 'figure'),
-              [Input('interval-component', 'n_intervals')])
-def update_graph_scatter(n):
-    db_name     = 'sensor_data'
-    measurement = 'autogen.mean_60s' # 'data_raw', 'autogen.mean_60s', 'autogen.mean_1h', 'autogen.mean_1d'
-    period      = '1d' # '1d' '30d' '52w'
+              [Input('interval-component', 'n_intervals'),
+               Input('dropdown-measurement', 'value'),
+               Input('dropdown-period', 'value')
+              ])
+def update_graph(n, dropdown_measurement, dropdown_period):
     # read database
+    measurement = dropdown_measurement
+    period      = dropdown_period
     data        = read_db(db_name, measurement, period)
     # return data and layout
     return {

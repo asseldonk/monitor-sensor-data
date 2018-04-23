@@ -1,12 +1,44 @@
 $dark-background : rgb(36, 36, 36);
 $font-color      : rgb(240, 240, 240);
 
+@mixin dropdown-setup {
+    padding : 6px 20px 0 0;
+    width   : 300px;
+} 
+
+
 body {
     background-color        : $dark-background;
     font-family             : Arial, Helvetica, sans-serif;
     min-height              : 100%;
     -webkit-font-smoothing  : antialiased;
     -moz-osx-font-smoothing : grayscale;
+
+    .dropdowns {
+        display : -webkit-box;
+        display : -moz-box;
+        display : -ms-flexbox;
+        display : -webkit-flex;
+        display : flex;
+        flex-direction  : row;
+        justify-content : flex-start;
+        align-content   : flex-start;
+        flex-wrap       : wrap;
+        label {
+            color     : #fff;
+            font-size : .9rem;
+            margin-bottom : 4px;
+        }
+        #dropdown-measurement {
+            @include dropdown-setup;
+        }
+        #dropdown-period {
+            @include dropdown-setup;
+        }
+        #dropdown-interval {
+            @include dropdown-setup;
+        }
+    }
 
     h1 {
         color : $font-color;
